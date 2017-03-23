@@ -10,21 +10,4 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.a10017404.dodgegame.MainActivity">
 
-    <Button
-        android:text="RUN"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="14dp"
-        android:id="@+id/run" />
-
-    <Button
-        android:text="LAUNCH"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/run"
-        android:layout_alignStart="@+id/run"
-        android:layout_marginTop="18dp"
-        android:id="@+id/launch" />
 </RelativeLayout>

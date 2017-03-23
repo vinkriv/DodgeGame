@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
@@ -14,17 +16,23 @@ import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
+
     //Code from this program has been used from "Beginning Android Games" by Mario Zechner
     //Review SurfaceView, Canvas, continue
 
     GameSurface gameSurface;
+    int objx=100;
+    int objy=1300;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gameSurface = new GameSurface(this);
         setContentView(gameSurface);
+        SensorManager manager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        Sensor mysensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        manager.registerListener(this,mysensor,SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
@@ -39,6 +47,15 @@ public class MainActivity extends AppCompatActivity {
         gameSurface.resume();
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        objx-=sensorEvent.values[0];
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
 
 
     //----------------------------GameSurface Below This Line--------------------------
@@ -81,8 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 Canvas canvas= holder.lockCanvas();
                 canvas.drawRGB(255,0,0);
                 int value = 5;
-                canvas.drawBitmap(myImage,500+value,1100,null);
-
+                canvas.drawBitmap(myImage,objx,objy,null);
                 holder.unlockCanvasAndPost(canvas);
             }
         }
