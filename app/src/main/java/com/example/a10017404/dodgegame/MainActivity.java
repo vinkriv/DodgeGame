@@ -49,11 +49,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         objx-=sensorEvent.values[0];
-        if (objx>100){
+        if (objx<100){
             objx=100;
         }
-        if (objx<1300){
-            objx=1300;
+        if (objx>1250){
+            objx=1250;
         }
     }
 
