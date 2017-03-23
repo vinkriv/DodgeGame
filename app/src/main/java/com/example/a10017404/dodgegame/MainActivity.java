@@ -23,7 +23,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     GameSurface gameSurface;
     int objx=100;
-    int objy=1300;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +48,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        objx-=sensorEvent.values[0];
+        if (!(objx<=100)&&!(objx>=1200)){
+            objx-=sensorEvent.values[0];
+        }
+        if (objx==100){
+            objx+=100;
+        }
+        if (objx==1200){
+            objx-=100;
+        }
+
     }
 
     @Override
@@ -98,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Canvas canvas= holder.lockCanvas();
                 canvas.drawRGB(255,0,0);
                 int value = 5;
-                canvas.drawBitmap(myImage,objx,objy,null);
+                canvas.drawBitmap(myImage,objx,1300,null);
                 holder.unlockCanvasAndPost(canvas);
             }
         }
