@@ -48,13 +48,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        objx-=sensorEvent.values[0];
-        if (objx<100){
-            objx=100;
+        int newx=objx-=Math.round(sensorEvent.values[0]);
+        if (newx<=15){
+            newx=16;
         }
-        if (objx>1250){
-            objx=1250;
+        if (newx>=1250){
+            newx=1249;
         }
+        objx=newx;
     }
 
     @Override
@@ -102,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 Canvas canvas= holder.lockCanvas();
                 canvas.drawRGB(255,0,0);
-                int value = 5;
                 canvas.drawBitmap(myImage,objx,1300,null);
                 holder.unlockCanvasAndPost(canvas);
             }
