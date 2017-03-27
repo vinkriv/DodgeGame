@@ -4,17 +4,25 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
 
@@ -23,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     GameSurface gameSurface;
     int objx=100;
+    ArrayList<Obstacle> obstacles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SensorManager manager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         Sensor mysensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         manager.registerListener(this,mysensor,SensorManager.SENSOR_DELAY_FASTEST);
+        obstacles.add(new Obstacle());
+
     }
 
     @Override
@@ -101,9 +112,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (holder.getSurface().isValid() == false)
                     continue;
 
-                Canvas canvas= holder.lockCanvas();
+                final Canvas canvas= holder.lockCanvas();
                 canvas.drawRGB(255,0,0);
                 canvas.drawBitmap(myImage,objx,1300,null);
+                final Paint myPaint = new Paint();
+                myPaint.setColor(Color.rgb(0, 255, 0));
+                myPaint.setStrokeWidth(10);
+
+                /*Handler handler = new Handler(Looper.getMainLooper());
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        obstacles.add(new Obstacle());
+                    }
+                },2000);
+                */
+                for (int x=0;x<obstacles.size();x++){
+                    Rect obst = new Rect(obstacles.get(x).getX(),obstacles.get(x).getY(),obstacles.get(x).getX()+200,obstacles.get(x).getY()+300);
+                    canvas.drawRect(obst,myPaint);
+                    Rect hitbox = new Rect(objx,1300,objx+myImage.getWidth(),1300+myImage.getHeight());
+                    boolean check = obst.intersect(hitbox);
+                    if (check){
+                        Toast.makeText(MainActivity.this, "He got hit!", Toast.LENGTH_SHORT).show();
+                    }
+                }
                 holder.unlockCanvasAndPost(canvas);
             }
         }
