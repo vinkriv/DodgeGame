@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -32,17 +33,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     GameSurface gameSurface;
     int objx=100;
     ArrayList<Obstacle> obstacles;
+    int hits=0;
+    int runs=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gameSurface = new GameSurface(this);
         setContentView(gameSurface);
+        obstacles = new ArrayList<>();
+        obstacles.add(new Obstacle());
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                obstacles.add(new Obstacle());
+            }
+        },5000);
         SensorManager manager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         Sensor mysensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         manager.registerListener(this,mysensor,SensorManager.SENSOR_DELAY_FASTEST);
-        obstacles.add(new Obstacle());
-
     }
 
     @Override
@@ -118,22 +128,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 final Paint myPaint = new Paint();
                 myPaint.setColor(Color.rgb(0, 255, 0));
                 myPaint.setStrokeWidth(10);
+                Paint pointsPaint = new Paint();
+                pointsPaint.setTextSize(200);
+                canvas.drawText(String.valueOf(runs-hits),800,500,pointsPaint);
+                if (obstacles.size()>0) {
+                    for (int index = 0; index < obstacles.size(); index++) {
+                        obstacles.get(index).setY(obstacles.get(index).getY()+10);
+                        Rect obst = new Rect(obstacles.get(index).getX(), obstacles.get(index).getY(), obstacles.get(index).getX() + 200, obstacles.get(index).getY() + 300);
+                        canvas.drawRect(obst, myPaint);
+                        Rect hitbox = new Rect(objx, 1300, objx + myImage.getWidth(), 1300 + myImage.getHeight());
+                        if (!obstacles.get(index).isHit()){
+                           obstacles.get(index).setHit(obst.intersect(hitbox));
+                        }
+                        if (obstacles.get(index).getY()>screenHeight){
+                            obstacles.get(index).setY(0);
+                            obstacles.get(index).setX();
+                            if (obstacles.get(index).isHit()) {
+                                hits++;
+                            }
+                            obstacles.get(index).setHit(false);
+                            runs++;
+                        }
 
-                /*Handler handler = new Handler(Looper.getMainLooper());
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        obstacles.add(new Obstacle());
-                    }
-                },2000);
-                */
-                for (int x=0;x<obstacles.size();x++){
-                    Rect obst = new Rect(obstacles.get(x).getX(),obstacles.get(x).getY(),obstacles.get(x).getX()+200,obstacles.get(x).getY()+300);
-                    canvas.drawRect(obst,myPaint);
-                    Rect hitbox = new Rect(objx,1300,objx+myImage.getWidth(),1300+myImage.getHeight());
-                    boolean check = obst.intersect(hitbox);
-                    if (check){
-                        Toast.makeText(MainActivity.this, "He got hit!", Toast.LENGTH_SHORT).show();
                     }
                 }
                 holder.unlockCanvasAndPost(canvas);
