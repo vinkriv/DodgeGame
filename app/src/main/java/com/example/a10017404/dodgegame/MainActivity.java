@@ -20,6 +20,8 @@ import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.lang.reflect.Array;
@@ -32,9 +34,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     GameSurface gameSurface;
     int objx=100;
+    int obstspeed=10;
     ArrayList<Obstacle> obstacles;
     int hits=0;
     int runs=0;
+    boolean fast=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +53,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void run() {
                 obstacles.add(new Obstacle());
             }
-        },5000);
-        SensorManager manager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        }, 5000);
+        SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor mysensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        manager.registerListener(this,mysensor,SensorManager.SENSOR_DELAY_FASTEST);
+        manager.registerListener(this, mysensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
@@ -113,6 +117,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             paintProperty= new Paint();
             paintProperty.setTextSize(100);
 
+            this.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (fast) {
+                        obstspeed = 10;
+                        fast=false;
+                    } else {
+                        obstspeed = 30;
+                        fast=true;
+                    }
+                }
+            });
+
         }
 
         @Override
@@ -133,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 canvas.drawText(String.valueOf(runs-hits),800,500,pointsPaint);
                 if (obstacles.size()>0) {
                     for (int index = 0; index < obstacles.size(); index++) {
-                        obstacles.get(index).setY(obstacles.get(index).getY()+10);
+                        obstacles.get(index).setY(obstacles.get(index).getY()+obstspeed);
                         Rect obst = new Rect(obstacles.get(index).getX(), obstacles.get(index).getY(), obstacles.get(index).getX() + 200, obstacles.get(index).getY() + 300);
                         canvas.drawRect(obst, myPaint);
                         Rect hitbox = new Rect(objx, 1300, objx + myImage.getWidth(), 1300 + myImage.getHeight());
