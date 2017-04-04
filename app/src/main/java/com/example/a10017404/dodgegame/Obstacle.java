@@ -6,7 +6,7 @@ package com.example.a10017404.dodgegame;
 
 public class Obstacle {
     int x = (int)(Math.random()*1250);
-    int y = 0;
+    int y = 200;
     boolean hit;
 
     public int getX() {

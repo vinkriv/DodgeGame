@@ -12,8 +12,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,14 +43,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     int hits=0;
     int runs=0;
     boolean fast=false;
+    SoundPool soundPool;
+    int chimesID,chordID,dingID;
+    MediaPlayer player;
+    boolean isHit;
+    int hyperdriveId;
+    int collisionID;
+    float starttime;
+    SystemClock clock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gameSurface = new GameSurface(this);
+        starttime = clock.currentThreadTimeMillis();
         setContentView(gameSurface);
         obstacles = new ArrayList<>();
         obstacles.add(new Obstacle());
+        player = MediaPlayer.create(this,R.raw.rickroll);
+        player.setLooping(true);
+        player.setVolume(25,25);
+        player.start();
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
             @Override
@@ -57,6 +74,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor mysensor = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         manager.registerListener(this, mysensor, SensorManager.SENSOR_DELAY_FASTEST);
+        SoundPool.Builder builder = new SoundPool.Builder();
+        builder.setMaxStreams(2);
+        soundPool = builder.build();
+        hyperdriveId = soundPool.load(MainActivity.this, R.raw.hyperdrive, 1);
+        collisionID = soundPool.load(MainActivity.this,R.raw.collision,1);
     }
 
     @Override
@@ -95,7 +117,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Thread gameThread;
         SurfaceHolder holder;
         volatile boolean running = false;
-        Bitmap myImage;
+        Bitmap spaceship;
+        Bitmap firespaceship;
+
         Paint paintProperty;
 
         int screenWidth;
@@ -105,8 +129,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             super(context);
 
             holder=getHolder();
-
-            myImage = BitmapFactory.decodeResource(getResources(),R.drawable.spaceship);
+            spaceship = BitmapFactory.decodeResource(getResources(),R.drawable.spaceship);
+            firespaceship = BitmapFactory.decodeResource(getResources(),R.drawable.firespaceship);
 
             Display screenDisplay = getWindowManager().getDefaultDisplay();
             Point sizeOfScreen = new Point();
@@ -124,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         obstspeed = 10;
                         fast=false;
                     } else {
+                        soundPool.play(hyperdriveId,50,50,1,0,1);
                         obstspeed = 30;
                         fast=true;
                     }
@@ -135,27 +160,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             while (running){
-
-                if (holder.getSurface().isValid() == false)
+                if (30000-clock.currentThreadTimeMillis()-starttime<=0){
+                    running=false;
+                }
+                if (!holder.getSurface().isValid())
                     continue;
-
                 final Canvas canvas= holder.lockCanvas();
                 canvas.drawRGB(255,0,0);
-                canvas.drawBitmap(myImage,objx,1300,null);
-                final Paint myPaint = new Paint();
-                myPaint.setColor(Color.rgb(0, 255, 0));
-                myPaint.setStrokeWidth(10);
-                Paint pointsPaint = new Paint();
-                pointsPaint.setTextSize(200);
-                canvas.drawText(String.valueOf(runs-hits),800,500,pointsPaint);
+                //canvas.drawBitmap(spaceship,objx,1300,null);
+                final Paint obstPaint = new Paint();
+                obstPaint.setColor(Color.rgb(0, 255, 0));
+                obstPaint.setStrokeWidth(10);
+                final Paint pointsPaint = new Paint();
+                pointsPaint.setTextSize(100);
+                canvas.drawText(String.valueOf(runs-hits),1000,200,pointsPaint);
+                canvas.drawText(String.valueOf((30000-clock.currentThreadTimeMillis()-starttime)/1000),100,200,pointsPaint);
                 if (obstacles.size()>0) {
                     for (int index = 0; index < obstacles.size(); index++) {
                         obstacles.get(index).setY(obstacles.get(index).getY()+obstspeed);
                         Rect obst = new Rect(obstacles.get(index).getX(), obstacles.get(index).getY(), obstacles.get(index).getX() + 200, obstacles.get(index).getY() + 300);
-                        canvas.drawRect(obst, myPaint);
-                        Rect hitbox = new Rect(objx, 1300, objx + myImage.getWidth(), 1300 + myImage.getHeight());
+                        canvas.drawRect(obst, obstPaint);
+                        Rect hitbox = new Rect(objx, 1300, objx + spaceship.getWidth(), 1300 + spaceship.getHeight());
+                        if (isHit){
+                            canvas.drawBitmap(firespaceship,objx,1300,null);
+                        }
+                        else {
+                            canvas.drawBitmap(spaceship, objx, 1300, null);
+                        }
                         if (!obstacles.get(index).isHit()){
                            obstacles.get(index).setHit(obst.intersect(hitbox));
+                        }
+                        if (obst.intersect(hitbox)){
+                            soundPool.play(collisionID,100,100,1,0,1);
+                        }
+                        if (!isHit){
+                            isHit=obst.intersect(hitbox);
                         }
                         if (obstacles.get(index).getY()>screenHeight){
                             obstacles.get(index).setY(0);
@@ -164,10 +203,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 hits++;
                             }
                             obstacles.get(index).setHit(false);
+                            isHit=false;
                             runs++;
                         }
-
                     }
+                }
+                if (!running){
+                    canvas.drawRGB(255,0,0);
+                    canvas.drawText("GAME OVER",400,200,pointsPaint);
+                    canvas.drawText("Score: "+String.valueOf(runs-hits),500,500,pointsPaint);
                 }
                 holder.unlockCanvasAndPost(canvas);
             }
@@ -177,14 +221,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             running=true;
             gameThread=new Thread(this);
             gameThread.start();
+            player.start();
         }
 
         public void pause() {
             running = false;
+            player.pause();
             while (true) {
                 try {
                     gameThread.join();
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
