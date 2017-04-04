@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         obstacles.add(new Obstacle());
         player = MediaPlayer.create(this,R.raw.rickroll);
         player.setLooping(true);
-        player.setVolume(25,25);
+        player.setVolume((float)0.25,(float)0.25);
         player.start();
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         builder.setMaxStreams(2);
         soundPool = builder.build();
         hyperdriveId = soundPool.load(MainActivity.this, R.raw.hyperdrive, 1);
-        collisionID = soundPool.load(MainActivity.this,R.raw.collision,1);
     }
 
     @Override
@@ -144,11 +143,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             this.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    soundPool.play(hyperdriveId,1,1,1,0,1);
                     if (fast) {
                         obstspeed = 10;
                         fast=false;
                     } else {
-                        soundPool.play(hyperdriveId,50,50,1,0,1);
                         obstspeed = 30;
                         fast=true;
                     }
@@ -160,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             while (running){
-                if (30000-clock.currentThreadTimeMillis()-starttime<=0){
+                if (10000-clock.currentThreadTimeMillis()-starttime<=0){
                     running=false;
                 }
                 if (!holder.getSurface().isValid())
@@ -174,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 final Paint pointsPaint = new Paint();
                 pointsPaint.setTextSize(100);
                 canvas.drawText(String.valueOf(runs-hits),1000,200,pointsPaint);
-                canvas.drawText(String.valueOf((30000-clock.currentThreadTimeMillis()-starttime)/1000),100,200,pointsPaint);
+                canvas.drawText(String.valueOf((10000-clock.currentThreadTimeMillis()-starttime)/1000),100,200,pointsPaint);
                 if (obstacles.size()>0) {
                     for (int index = 0; index < obstacles.size(); index++) {
                         obstacles.get(index).setY(obstacles.get(index).getY()+obstspeed);
